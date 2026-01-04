@@ -37,8 +37,9 @@ async def main() -> None:
     )
 
     import handlers.start
+    import handlers.init_group
 
-    dp.include_routers(handlers.start.router_start)
+    dp.include_routers(handlers.start.router_start, handlers.init_group.router_init_group)
 
     try:
         await dp.start_polling(bot)

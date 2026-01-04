@@ -2,3 +2,5 @@
 /.vscode
 /.venv
 .env
+/middlewares/__pycache__
+*.pyc

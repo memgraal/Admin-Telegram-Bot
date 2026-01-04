@@ -1,8 +1,7 @@
-import dataclasses
 import logging
 
 from sqlalchemy import ForeignKey, JSON, String
-from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -44,8 +43,7 @@ class User(Base):
     user_id: Mapped[str] = mapped_column(unique=True)
 
     groups: Mapped[list["GroupUser"]] = relationship(
-        back_populates="user",
-        cascade="all, delete-orphan"
+        back_populates="user", cascade="all, delete-orphan"
     )
 
     def __repr__(self):
@@ -60,8 +58,7 @@ class Group(Base):
     settings: Mapped[JSON] = mapped_column(type_=JSON)
 
     users: Mapped[list["GroupUser"]] = relationship(
-        back_populates="group",
-        cascade="all, delete-orphan"
+        back_populates="group", cascade="all, delete-orphan"
     )
 
     def __repr__(self):

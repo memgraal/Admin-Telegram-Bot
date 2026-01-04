@@ -30,13 +30,14 @@ async def main() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(database.Base.metadata.create_all)
 
-
-
     dp.update.middleware(
-        middlewares.db_middleware.DatabaseMiddleware(session_maker=session_maker),
+        middlewares.db_middleware.DatabaseMiddleware(
+            session_maker=session_maker,
+        ),
     )
-    
+
     import handlers.start
+
     dp.include_routers(handlers.start.router_start)
 
     try:

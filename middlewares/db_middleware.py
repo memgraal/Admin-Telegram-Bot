@@ -1,8 +1,7 @@
-from typing import Callable, Dict, Any, Awaitable
+from typing import Any
 
 from aiogram import BaseMiddleware
-from aiogram.types import TelegramObject
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 
 class DatabaseMiddleware(BaseMiddleware):
@@ -11,7 +10,7 @@ class DatabaseMiddleware(BaseMiddleware):
 
     async def __call__(self, handler, event, data) -> Any:
         async with self.session_maker() as session:
-            data['session'] = session
+            data["session"] = session
             try:
                 result = await handler(event, data)
                 await session.commit()

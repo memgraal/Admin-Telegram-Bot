@@ -14,6 +14,10 @@ dotenv.load_dotenv()
 
 storage = SQLiteStorage("states.db")
 
+bot = aiogram.Bot(token=os.getenv("BOT_TOKEN"))
+dp = aiogram.Dispatcher(storage=storage)
+
+
 async def main() -> None:
     logging.basicConfig(
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -26,8 +30,7 @@ async def main() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(database.Base.metadata.create_all)
 
-    bot = aiogram.Bot(token=os.getenv("BOT_TOKEN"))
-    dp = aiogram.Dispatcher(storage=storage)
+
 
     dp.update.middleware(
         middlewares.db_middleware.DatabaseMiddleware(session_maker=session_maker),

@@ -1,5 +1,5 @@
 from aiogram import Router, F, types
-from aiogram.filters.command import Command
+from aiogram.filters.command import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.enums import ParseMode
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 router_start = Router()
 
 
-@router_start.message(Command("start"))
+@router_start.message(CommandStart())
 @private_message
 async def start(message: types.Message, state: FSMContext):
     await message.answer("Здесь <b>будет</b> список ваших групп.", parse_mode=ParseMode.HTML)

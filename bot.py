@@ -1,9 +1,14 @@
 import asyncio
+import os
+
 import aiogram
 from aiogram_fsm_sqlitestorage import SQLiteStorage
 import dotenv
 import logging
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
+import middlewares.db_middleware
+import database
 
 dotenv.load_dotenv()
 
@@ -15,10 +20,23 @@ async def main() -> None:
         level=logging.INFO,
     )
 
-    bot = aiogram.Bot(token=dotenv.get_key("BOT_TOKEN"))
+    engine = create_async_engine("sqlite+aiosqlite:///database.db", echo=True)
+    session_maker = async_sessionmaker(engine, expire_on_commit=False)
+
+    async with engine.begin() as conn:
+        await conn.run_sync(database.Base.metadata.create_all)
+
+    bot = aiogram.Bot(token=os.getenv("BOT_TOKEN"))
     dp = aiogram.Dispatcher(storage=storage)
 
-    await dp.start_polling(bot)
+    dp.update.middleware(
+        middlewares.db_middleware.DatabaseMiddleware(session_maker=session_maker),
+    )
+
+    try:
+        await dp.start_polling(bot)
+    finally:
+        await engine.dispose()
 
 
 if __name__ == "__main__":

@@ -1,10 +1,10 @@
 import asyncio
 import os
+import logging
 
 import aiogram
 from aiogram_fsm_sqlitestorage import SQLiteStorage
 import dotenv
-import logging
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 import middlewares.db_middleware
@@ -18,14 +18,20 @@ bot = aiogram.Bot(token=os.getenv("BOT_TOKEN"))
 dp = aiogram.Dispatcher(storage=storage)
 
 
-async def main() -> None: 
+async def main() -> None:
     logging.basicConfig(
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         level=logging.INFO,
     )
 
-    engine = create_async_engine("sqlite+aiosqlite:///database.db", echo=True)
-    session_maker = async_sessionmaker(engine, expire_on_commit=False)
+    engine = create_async_engine(
+        "sqlite+aiosqlite:///database.db",
+        echo=True
+    )
+    session_maker = async_sessionmaker(
+        engine,
+        expire_on_commit=False
+    )
 
     async with engine.begin() as conn:
         await conn.run_sync(database.Base.metadata.create_all)
@@ -33,7 +39,7 @@ async def main() -> None:
     dp.update.middleware(
         middlewares.db_middleware.DatabaseMiddleware(
             session_maker=session_maker,
-        ),
+        )
     )
 
     import handlers.start
@@ -41,13 +47,19 @@ async def main() -> None:
 
     dp.include_routers(
         handlers.start.router_start,
-    )
-    dp.include_routers(
         handlers.init_group.router_init_group,
     )
 
     try:
-        await dp.start_polling(bot)
+        await dp.start_polling(
+            bot,
+            allowed_updates=[
+                "message",
+                "callback_query",
+                "chat_member",          # ← ВАЖНО
+                "my_chat_member",       # ← желательно тоже
+            ],
+        )
     finally:
         await engine.dispose()
 

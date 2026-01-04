@@ -18,7 +18,7 @@ bot = aiogram.Bot(token=os.getenv("BOT_TOKEN"))
 dp = aiogram.Dispatcher(storage=storage)
 
 
-async def main() -> None:
+async def main() -> None: 
     logging.basicConfig(
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         level=logging.INFO,
@@ -39,7 +39,12 @@ async def main() -> None:
     import handlers.start
     import handlers.init_group
 
-    dp.include_routers(handlers.start.router_start, handlers.init_group.router_init_group)
+    dp.include_routers(
+        handlers.start.router_start,
+    )
+    dp.include_routers(
+        handlers.init_group.router_init_group,
+    )
 
     try:
         await dp.start_polling(bot)

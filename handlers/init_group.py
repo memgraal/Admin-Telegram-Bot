@@ -27,7 +27,6 @@ async def on_chat_member_update(
         )
         result = await session.execute(stmt)
         group = result.scalar_one_or_none()
-
         if not group:
             new_group = database.Group(
                 chat_id=str(update.chat.id),

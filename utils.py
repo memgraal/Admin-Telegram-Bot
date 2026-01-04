@@ -14,7 +14,7 @@ def private_message(func):
     return wrapper
 
 
-# Получить юзернейм ботаа
+# Получить юзернейм бота
 async def get_bot_username():
     from bot import bot
 

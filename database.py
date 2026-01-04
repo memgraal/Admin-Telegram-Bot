@@ -1,6 +1,8 @@
+import dataclasses
 import logging
+
 from sqlalchemy import ForeignKey, JSON, String
-from sqlalchemy.ext.asyncio import AsyncAttrs
+from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -54,6 +56,7 @@ class Groups(Base):
     __tablename__ = "groups"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    chat_id: Mapped[str] = mapped_column(unique=True)
     settings: Mapped[JSON] = mapped_column(type_=JSON)
 
     users: Mapped[list["GroupUsers"]] = relationship(

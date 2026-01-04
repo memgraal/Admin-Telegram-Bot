@@ -2,6 +2,7 @@ import logging
 
 from sqlalchemy import ForeignKey, JSON, String
 from sqlalchemy.ext.asyncio import AsyncAttrs
+from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -55,7 +56,10 @@ class Group(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     chat_id: Mapped[str] = mapped_column(unique=True)
-    settings: Mapped[JSON] = mapped_column(type_=JSON)
+    settings: Mapped[dict] = mapped_column(
+        MutableDict.as_mutable(JSON),
+        default=dict
+    )
 
     users: Mapped[list["GroupUser"]] = relationship(
         back_populates="group", cascade="all, delete-orphan"

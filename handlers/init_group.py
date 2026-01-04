@@ -47,11 +47,49 @@ async def on_my_chat_member_update(
             }
         )
         session.add(group)
-        await session.commit()
+        await session.flush()
 
         logger.info(
             f"Группа {update.chat.title} (ID: {update.chat.id}) добавлена в БД"
         )
+
+    admins = await update.bot.get_chat_administrators(update.chat.id)
+
+    for admin in admins:
+        tg_user = admin.user
+        status = admin.status  # administrator | creator
+
+        # --- User ---
+        stmt = select(database.User).where(
+            database.User.user_id == str(tg_user.id)
+        )
+
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+
+        if not user:
+            user = database.User(user_id=str(tg_user.id))
+            session.add(user)
+            await session.flush()
+
+        # --- GroupUser ---
+        stmt = select(database.GroupUser).where(
+            database.GroupUser.user_id == user.id,
+            database.GroupUser.group_id == group.id
+        )
+        result = await session.execute(stmt)
+        group_user = result.scalar_one_or_none()
+
+        if not group_user:
+            session.add(
+                database.GroupUser(
+                    user_id=user.id,
+                    group_id=group.id,
+                    status=status
+                )
+            )
+
+    await session.commit()
 
     await update.bot.send_message(
         chat_id=update.chat.id,

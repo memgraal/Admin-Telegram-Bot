@@ -2,6 +2,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeybo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
+#
 def bot_url_button(bot_username):
     builder = InlineKeyboardBuilder()
     builder.add(

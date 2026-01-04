@@ -32,6 +32,9 @@ async def main() -> None:
     dp.update.middleware(
         middlewares.db_middleware.DatabaseMiddleware(session_maker=session_maker),
     )
+    
+    import handlers.start
+    dp.include_routers(handlers.start.router_start)
 
     try:
         await dp.start_polling(bot)

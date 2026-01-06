@@ -8,7 +8,9 @@ import dotenv
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 import middlewares.db_middleware
+import middlewares.banwords_middleware
 import database
+
 
 dotenv.load_dotenv()
 
@@ -25,7 +27,7 @@ async def main() -> None:
     )
 
     engine = create_async_engine(
-        "sqlite+aiosqlite:///database.db",
+        os.getenv("DB_URL"),
         echo=True
     )
     session_maker = async_sessionmaker(
@@ -37,9 +39,11 @@ async def main() -> None:
         await conn.run_sync(database.Base.metadata.create_all)
 
     dp.update.middleware(
-        middlewares.db_middleware.DatabaseMiddleware(
-            session_maker=session_maker,
-        )
+        middlewares.db_middleware.DatabaseMiddleware(session_maker)
+    )
+
+    dp.message.middleware(
+        middlewares.banwords_middleware.BanWordsMiddleware()
     )
 
     import handlers.start
@@ -56,8 +60,8 @@ async def main() -> None:
             allowed_updates=[
                 "message",
                 "callback_query",
-                "chat_member",          # ← ВАЖНО
-                "my_chat_member",       # ← желательно тоже
+                "chat_member",
+                "my_chat_member",
             ],
         )
     finally:

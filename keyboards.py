@@ -78,9 +78,17 @@ def group_settings_keyboard(
 
     builder.adjust(1)
 
+    # ➕ кнопка добавления banwords
+    builder.button(
+        text="🚫 Добавить бан-слова",
+        callback_data=f"add_banwords:{group.id}"
+    )
+
     builder.button(
         text="⬅️ Назад к группам",
         callback_data="back_to_groups"
     )
+
+    builder.adjust(1)
 
     return builder.as_markup()

@@ -1,27 +1,25 @@
 import logging
 
-from aiogram import Router, types
+from aiogram import Router, types, F
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest
 
 from database import Group
+from filters.is_verified import IsVerified  # ⬅️ ВАЖНО
 
 logger = logging.getLogger(__name__)
 
 router_banwords = Router()
 
 
-@router_banwords.message()
+@router_banwords.message(
+    F.chat.type.in_(("group", "supergroup")), IsVerified()
+)
 async def banwords_handler(
     message: types.Message,
     session: AsyncSession
 ):
-    # Только группы
-    if message.chat.type not in ("group", "supergroup"):
-        return
-
-    # text ИЛИ caption
     text = message.text or message.caption
     if not text:
         return
@@ -31,7 +29,6 @@ async def banwords_handler(
     settings = await session.scalar(
         select(Group.settings).where(Group.chat_id == chat_id)
     )
-
     if not settings:
         return
 

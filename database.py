@@ -4,6 +4,7 @@ from sqlalchemy import ForeignKey, JSON, String
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import DateTime, func
 
 
 logger = logging.getLogger(__name__)
@@ -67,3 +68,25 @@ class Group(Base):
 
     def __repr__(self):
         return f"Group(id={self.id}, settings={self.settings})"
+
+
+class Logs(Base):
+    __tablename__ = "logs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    chat_id: Mapped[str] = mapped_column(String(32), index=True)
+    user_id: Mapped[str] = mapped_column(String(32), index=True)
+
+    action: Mapped[str] = mapped_column(String(64))
+
+    created_at: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now()
+    )
+
+    def __repr__(self):
+        return (
+            f"Logs(chat_id={self.chat_id}, "
+            f"user_id={self.user_id}, action={self.action})"
+        )

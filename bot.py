@@ -44,11 +44,13 @@ async def main() -> None:
     import handlers.start
     import handlers.init_group
     import handlers.banwords
+    import handlers.captcha
 
     dp.include_routers(
         handlers.start.router_start,
         handlers.init_group.router_init_group,
-        handlers.banwords.router_banwords,  # 🔥 ВАЖНО
+        handlers.captcha.router_captcha,
+        handlers.banwords.router_banwords,
     )
 
     try:

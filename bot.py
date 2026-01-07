@@ -8,7 +8,6 @@ import dotenv
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 import middlewares.db_middleware
-import middlewares.banwords_middleware
 import database
 
 
@@ -42,16 +41,14 @@ async def main() -> None:
         middlewares.db_middleware.DatabaseMiddleware(session_maker)
     )
 
-    dp.message.middleware(
-        middlewares.banwords_middleware.BanWordsMiddleware()
-    )
-
     import handlers.start
     import handlers.init_group
+    import handlers.banwords
 
     dp.include_routers(
         handlers.start.router_start,
         handlers.init_group.router_init_group,
+        handlers.banwords.router_banwords,  # 🔥 ВАЖНО
     )
 
     try:

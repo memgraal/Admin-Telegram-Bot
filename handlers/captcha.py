@@ -9,7 +9,6 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-# ⬇️ ИМПОРТ СВОИХ МОДЕЛЕЙ (ПРОВЕРЬ ПУТЬ!)
 from database import Group, GroupUser, User, Logs
 from filters.is_not_verified import IsNotVerified
 
@@ -131,9 +130,13 @@ async def captcha_message_handler(
     # =========================
     # 8️⃣ Отправляем капчу
     # =========================
-    captcha_msg = await message.answer(
-        f"👋 {message.from_user.mention_html()}, подтвердите, что вы не бот\n"
-        f"⏳ У вас {CAPTCHA_TIMEOUT} секунд",
+    captcha_msg = await message.bot.send_message(
+        chat_id=message.chat.id,
+        text=(
+            f"👋 {message.from_user.mention_html()}, "
+            "подтвердите, что вы не бот\n"
+            f"⏳ У вас {CAPTCHA_TIMEOUT} секунд"
+        ),
         reply_markup=captcha_keyboard(chat_id, user_id),
         parse_mode="HTML"
     )

@@ -63,6 +63,7 @@ async def main() -> None:
                 "my_chat_member",
             ],
         )
+
     finally:
         await engine.dispose()
 

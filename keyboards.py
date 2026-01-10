@@ -92,3 +92,14 @@ def group_settings_keyboard(
     builder.adjust(1)
 
     return builder.as_markup()
+
+
+def captcha_keyboard(chat_id: int, user_id: int) -> types.InlineKeyboardMarkup:
+    return types.InlineKeyboardMarkup(
+        inline_keyboard=[
+            [types.InlineKeyboardButton(
+                text="✅ Я не бот",
+                callback_data=f"captcha:{chat_id}:{user_id}"
+            )]
+        ]
+    )

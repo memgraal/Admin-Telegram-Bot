@@ -1,6 +1,6 @@
 import logging
 
-from aiogram import Router, types
+from aiogram import Router, types, Bot
 from aiogram.filters import CommandStart
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
@@ -12,10 +12,60 @@ import database
 import keyboards
 from states import AddBanWords
 
-
 logger = logging.getLogger(__name__)
 
 router_start = Router()
+
+
+# =========================
+# helper: sync admins for group
+# =========================
+async def sync_group_admins(
+    group: database.Group, bot: Bot, session: AsyncSession
+):
+    try:
+        admins = await bot.get_chat_administrators(int(group.chat_id))
+    except Exception as e:
+        logger.warning(
+            f"Не удалось получить админов группы {group.chat_id}: {e}"
+        )
+        return
+
+    for admin in admins:
+        tg_user = admin.user
+        status = admin.status  # creator | administrator
+
+        # --- User ---
+        stmt = (
+            select(database.User)
+            .where(database.User.user_id == str(tg_user.id))
+        )
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+
+        if not user:
+            user = database.User(user_id=str(tg_user.id))
+            session.add(user)
+            await session.flush()
+
+        # --- GroupUser ---
+        stmt = select(database.GroupUser).where(
+            database.GroupUser.user_id == user.id,
+            database.GroupUser.group_id == group.id
+        )
+        result = await session.execute(stmt)
+        gu = result.scalar_one_or_none()
+
+        if not gu:
+            session.add(
+                database.GroupUser(
+                    user_id=user.id,
+                    group_id=group.id,
+                    status=status
+                )
+            )
+
+    await session.commit()
 
 
 # =========================
@@ -25,10 +75,20 @@ router_start = Router()
 @utils.private_message
 async def start(
     message: types.Message,
-    session: AsyncSession
+    session: AsyncSession,
+    bot: Bot
 ) -> None:
     user_id = str(message.from_user.id)
 
+    # получаем все группы, где бот состоит
+    stmt = select(database.Group)
+    groups_all = (await session.execute(stmt)).scalars().all()
+
+    # синхронизируем админов для каждой группы
+    for group in groups_all:
+        await sync_group_admins(group, bot, session)
+
+    # теперь выбираем уже корректные группы для юзера
     stmt = (
         select(database.Group)
         .join(database.GroupUser)
@@ -214,9 +274,7 @@ async def save_banwords(
         if w and w.strip()
     }
 
-    # =========================
     # SHOW
-    # =========================
     if text == "show":
         if not banwords:
             await message.answer("📭 Список бан-слов пуст")
@@ -229,9 +287,7 @@ async def save_banwords(
         await state.clear()
         return
 
-    # =========================
-    # DELETE / DEL / CLEAR
-    # =========================
+    # CLEAR
     if text in {"delete", "del", "clear"}:
         settings["banwords"] = []
         group.settings = settings
@@ -243,9 +299,7 @@ async def save_banwords(
         await state.clear()
         return
 
-    # =========================
-    # ADD WORDS
-    # =========================
+    # ADD
     words = {
         w.strip().lower()
         for w in message.text.replace("\n", " ").split(" ")

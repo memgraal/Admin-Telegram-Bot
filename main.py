@@ -1,5 +1,5 @@
-import asyncio
 import logging
+import asyncio
 import os
 
 from dotenv import load_dotenv
@@ -13,19 +13,29 @@ import handlers.init_group
 import handlers.start
 import middlewares.db_middleware
 
+
 load_dotenv()
 
 
-async def main() -> None:
+async def main():
+    # минимальный вывод
     logging.basicConfig(
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        level=logging.WARNING,
+        filename="bot.log",
+        filemode="a",
     )
+
+    logging.getLogger("aiogram").setLevel(logging.WARNING)
+    logging.getLogger("aiogram.event").setLevel(logging.ERROR)
+    logging.getLogger("aiogram.dispatcher").setLevel(logging.ERROR)
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
 
     engine = create_async_engine(
         os.getenv("DB_URL"),
-        echo=True
+        echo=False
     )
+
     session_maker = async_sessionmaker(
         engine,
         expire_on_commit=False
@@ -46,16 +56,7 @@ async def main() -> None:
     )
 
     try:
-        await dp.start_polling(
-            bot,
-            allowed_updates=[
-                "message",
-                "callback_query",
-                "chat_member",
-                "my_chat_member",
-            ],
-        )
-
+        await dp.start_polling(bot)
     finally:
         await engine.dispose()
 

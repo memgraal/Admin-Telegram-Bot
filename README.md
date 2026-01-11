@@ -59,7 +59,7 @@ python3 --version
 ### Клонируем репозиторий:
 
 ```bash
-git clone https://github.com/<ваш_репозиторий>/Anti-Spam-Bot.git
+git clone https://github.com/memgraal/Admin-Telegram-Bot.git
 cd Anti-Spam-Bot
 ```
 

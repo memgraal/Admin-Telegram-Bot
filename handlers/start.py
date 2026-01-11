@@ -80,15 +80,12 @@ async def start(
 ) -> None:
     user_id = str(message.from_user.id)
 
-    # получаем все группы, где бот состоит
     stmt = select(database.Group)
     groups_all = (await session.execute(stmt)).scalars().all()
 
-    # синхронизируем админов для каждой группы
     for group in groups_all:
         await sync_group_admins(group, bot, session)
 
-    # теперь выбираем уже корректные группы для юзера
     stmt = (
         select(database.Group)
         .join(database.GroupUser)
@@ -116,9 +113,6 @@ async def start(
     )
 
 
-# =========================
-# Пагинация групп
-# =========================
 @router_start.callback_query(lambda c: c.data.startswith("groups_page:"))
 async def paginate_groups(
     callback: types.CallbackQuery,
@@ -146,9 +140,6 @@ async def paginate_groups(
     await callback.answer()
 
 
-# =========================
-# Открыть настройки группы
-# =========================
 @router_start.callback_query(lambda c: c.data.startswith("group:"))
 async def open_group(
     callback: types.CallbackQuery,
@@ -168,9 +159,6 @@ async def open_group(
     await callback.answer()
 
 
-# =========================
-# Toggle настройки (True ⇄ False)
-# =========================
 @router_start.callback_query(lambda c: c.data.startswith("setting:"))
 async def toggle_setting(
     callback: types.CallbackQuery,
@@ -193,9 +181,6 @@ async def toggle_setting(
     await callback.answer("Настройка обновлена")
 
 
-# =========================
-# Назад к списку групп
-# =========================
 @router_start.callback_query(lambda c: c.data == "back_to_groups")
 async def back_to_groups(
     callback: types.CallbackQuery,
@@ -224,9 +209,6 @@ async def back_to_groups(
     await callback.answer()
 
 
-# =========================
-# Добавление banwords — старт
-# =========================
 @router_start.callback_query(lambda c: c.data.startswith("add_banwords:"))
 async def ask_banwords(
     callback: types.CallbackQuery,
@@ -245,9 +227,6 @@ async def ask_banwords(
     await callback.answer()
 
 
-# =========================
-# Добавление banwords — сохранение
-# =========================
 @router_start.message(AddBanWords.waiting_for_words)
 async def save_banwords(
     message: types.Message,
@@ -274,7 +253,6 @@ async def save_banwords(
         if w and w.strip()
     }
 
-    # SHOW
     if text == "show":
         if not banwords:
             await message.answer("📭 Список бан-слов пуст")
@@ -287,7 +265,6 @@ async def save_banwords(
         await state.clear()
         return
 
-    # CLEAR
     if text in {"delete", "del", "clear"}:
         settings["banwords"] = []
         group.settings = settings

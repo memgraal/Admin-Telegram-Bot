@@ -8,9 +8,11 @@ from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import utils
 from keyboards import captcha_keyboard
 from database import Group, GroupUser, User, Logs
 from filters.is_not_verified import IsNotVerified
+from filters.banned_text import is_message_in_ban
 
 
 logger = logging.getLogger(__name__)
@@ -37,7 +39,15 @@ async def captcha_message_handler(
     user_id = message.from_user.id
     key = (chat_id, user_id)
 
-    # 1️⃣ Получаем группу
+    text = message.text or message.caption
+    if text and await is_message_in_ban(
+        text=text,
+        session=session,
+        chat_id=str(chat_id),
+    ):
+        await utils.delete_message_safe(message)
+        return
+
     group = await session.scalar(
         select(Group)
         .where(
@@ -47,11 +57,9 @@ async def captcha_message_handler(
     if not group:
         return
 
-    # 2️⃣ Проверяем включена ли капча
     if not group.settings.get("captcha", False):
         return
 
-    # 3️⃣ Получаем или создаём User
     user = await session.scalar(
         select(User)
         .where(
@@ -63,17 +71,14 @@ async def captcha_message_handler(
         session.add(user)
         await session.commit()
 
-    # 4️⃣ Получаем GroupUser
     group_user = await session.scalar(select(GroupUser).where(
         GroupUser.user_id == user.id,
         GroupUser.group_id == group.id
     ))
 
-    # Уже подтверждён
     if group_user and group_user.status == "member":
         return
 
-    # 5️⃣ Уже в процессе
     if key in pending_captcha:
         try:
             await message.delete()
@@ -81,7 +86,6 @@ async def captcha_message_handler(
             pass
         return
 
-    # 6️⃣ Создаём запись pending
     if not group_user:
         group_user = GroupUser(
             user_id=user.id,
@@ -91,7 +95,6 @@ async def captcha_message_handler(
         session.add(group_user)
         await session.commit()
 
-    # 7️⃣ Отправляем капчу REPLY
     try:
         captcha_msg = await message.reply(
             f"👋 {message.from_user.mention_html()}, "
@@ -112,7 +115,6 @@ async def captcha_message_handler(
             parse_mode="HTML"
         )
 
-    # 8️⃣ timeout
     async def timeout():
         await asyncio.sleep(CAPTCHA_TIMEOUT)
 
@@ -120,19 +122,16 @@ async def captcha_message_handler(
         if not data:
             return
 
-        # удаляем капчу
         try:
             await captcha_msg.delete()
         except TelegramBadRequest:
             pass
 
-        # удаляем оригинал
         try:
             await message.delete()
         except TelegramBadRequest:
             pass
 
-        # лог
         session.add(Logs(
             chat_id=str(chat_id),
             user_id=str(user_id),
@@ -185,7 +184,6 @@ async def captcha_confirm(
     ))
     await session.commit()
 
-    # удаляем капчу
     try:
         await callback.message.delete()
     except TelegramBadRequest:

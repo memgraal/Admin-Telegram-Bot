@@ -8,8 +8,6 @@ from database import Group, GroupUser, User
 
 class IsNotVerified(BaseFilter):
     async def __call__(self, message: Message, session: AsyncSession) -> bool:
-        if message.chat.type not in ("group", "supergroup"):
-            return False
 
         group = await session.scalar(
             select(Group).where(Group.chat_id == str(message.chat.id))
@@ -21,7 +19,7 @@ class IsNotVerified(BaseFilter):
             select(User).where(User.user_id == str(message.from_user.id))
         )
         if not user:
-            return True  # новый → нужна капча
+            return True
 
         group_user = await session.scalar(
             select(GroupUser).where(

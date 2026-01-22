@@ -136,6 +136,22 @@ celerybeat.pid
 *.aof
 *.pid
 *.db
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Specific local DB files (если есть)
+states.db
+database.db
+filter-bot.db
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
 
 # RabbitMQ
 mnesia/

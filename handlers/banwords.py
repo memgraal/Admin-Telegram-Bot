@@ -24,6 +24,9 @@ async def banwords_handler(
     if not text:
         return
 
+    if message.sender_chat is not None:
+        return
+
     member = await message.bot.get_chat_member(
         chat_id=message.chat.id,
         user_id=message.from_user.id,

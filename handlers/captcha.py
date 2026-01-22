@@ -36,6 +36,9 @@ async def captcha_message_handler(
     if message.from_user.is_bot:
         return
 
+    if message.sender_chat is not None:
+        return
+
     member = await message.bot.get_chat_member(
         chat_id=message.chat.id,
         user_id=message.from_user.id,

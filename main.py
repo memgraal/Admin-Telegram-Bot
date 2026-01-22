@@ -20,10 +20,8 @@ load_dotenv()
 async def main():
     # минимальный вывод
     logging.basicConfig(
+        level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
-        level=logging.WARNING,
-        filename="bot.log",
-        filemode="a",
     )
 
     logging.getLogger("aiogram").setLevel(logging.WARNING)

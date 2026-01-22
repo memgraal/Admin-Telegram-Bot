@@ -4,8 +4,6 @@ from typing import Dict, Tuple
 
 from aiogram import Router, types, F
 from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
-from aiogram.types.chat_member_owner import ChatMemberOwner
-from aiogram.types.chat_member_administrator import ChatMemberAdministrator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,6 +12,7 @@ from keyboards import captcha_keyboard
 from database import Group, GroupUser, User, Logs
 from filters.is_not_verified import IsNotVerified
 from filters.banned_text import is_message_in_ban
+from filters.is_human import IsHuman
 
 
 logger = logging.getLogger(__name__)
@@ -27,24 +26,14 @@ CAPTCHA_TIMEOUT = 30
 
 @router_captcha.message(
     F.chat.type.in_(("group", "supergroup")),
-    IsNotVerified()
+    IsNotVerified(),
+    IsHuman()
 )
 async def captcha_message_handler(
     message: types.Message,
     session: AsyncSession,
 ):
     if message.from_user.is_bot:
-        return
-
-    if message.sender_chat is not None:
-        return
-
-    member = await message.bot.get_chat_member(
-        chat_id=message.chat.id,
-        user_id=message.from_user.id,
-    )
-
-    if isinstance(member, (ChatMemberOwner, ChatMemberAdministrator)):
         return
 
     chat_id = message.chat.id

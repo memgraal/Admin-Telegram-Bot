@@ -14,7 +14,8 @@ router_banwords = Router()
 
 
 @router_banwords.message(
-    F.chat.type.in_(("group", "supergroup")), IsVerified()
+    F.chat.type.in_(("group", "supergroup")),
+    IsVerified()
 )
 async def banwords_handler(
     message: types.Message,
@@ -24,7 +25,15 @@ async def banwords_handler(
     if not text:
         return
 
+    # ❌ не трогаем посты канала
+    if message.is_automatic_forward:
+        return
+
+    # ❌ не трогаем сообщения от каналов / анонимных админов
     if message.sender_chat is not None:
+        return
+
+    if message.from_user is None:
         return
 
     member = await message.bot.get_chat_member(
@@ -32,6 +41,7 @@ async def banwords_handler(
         user_id=message.from_user.id,
     )
 
+    # 🔒 админы и создатель
     if isinstance(member, (ChatMemberOwner, ChatMemberAdministrator)):
         return
 

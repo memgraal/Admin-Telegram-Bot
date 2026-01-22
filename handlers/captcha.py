@@ -36,6 +36,14 @@ async def captcha_message_handler(
     if message.from_user.is_bot:
         return
 
+    # ❌ не трогаем посты канала
+    if message.is_automatic_forward:
+        return
+
+    # ❌ не трогаем сообщения от каналов / анонимных админов
+    if message.sender_chat is not None:
+        return
+
     chat_id = message.chat.id
     user_id = message.from_user.id
     key = (chat_id, user_id)

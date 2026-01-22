@@ -1,3 +1,5 @@
+import re
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -16,12 +18,17 @@ async def is_message_in_ban(
     )
 
     if not settings:
-        return
+        return False
 
     banwords = settings.get("banwords", [])
     if not banwords:
-        return
+        return False
 
     text = text.lower()
 
-    return any(word in text for word in banwords)
+    for word in banwords:
+        pattern = rf"\b{re.escape(word.lower())}\b"
+        if re.search(pattern, text):
+            return True
+
+    return False

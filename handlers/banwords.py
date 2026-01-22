@@ -1,6 +1,7 @@
 import logging
 
 from aiogram import Router, types, F
+from aiogram.types import ChatMemberOwner, ChatMemberAdministrator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from filters.is_verified import IsVerified
@@ -21,6 +22,14 @@ async def banwords_handler(
 ):
     text = message.text or message.caption
     if not text:
+        return
+
+    member = await message.bot.get_chat_member(
+        chat_id=message.chat.id,
+        user_id=message.from_user.id,
+    )
+
+    if isinstance(member, (ChatMemberOwner, ChatMemberAdministrator)):
         return
 
     if not await is_message_in_ban(

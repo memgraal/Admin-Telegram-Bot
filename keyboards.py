@@ -18,15 +18,22 @@ def groups_keyboard(
     groups: list[database.Group],
     page: int,
 ) -> types.InlineKeyboardMarkup:
-
+    total = len(groups)
     start = page * GROUPS_PER_PAGE
     end = start + GROUPS_PER_PAGE
     current_groups = groups[start:end]
 
+    print(
+        f"[groups_keyboard] page={page} "
+        f"total={total} showing={start}:{end}"
+    )
+
     builder = InlineKeyboardBuilder()
 
     for group in current_groups:
+        # title может отсутствовать в БД
         title = getattr(group, "title", None) or f"ID {group.chat_id}"
+
         builder.button(
             text=f"📌 {title}",
             callback_data=f"group:{group.id}"
@@ -44,7 +51,7 @@ def groups_keyboard(
             )
         )
 
-    if end < len(groups):
+    if end < total:
         nav_buttons.append(
             types.InlineKeyboardButton(
                 text="➡️ Вперёд",
@@ -61,9 +68,18 @@ def groups_keyboard(
 def group_settings_keyboard(
     group: database.Group
 ) -> types.InlineKeyboardMarkup:
-
     builder = InlineKeyboardBuilder()
+
+    if not group:
+        print("[group_settings_keyboard] ERROR: group is None")
+        return builder.as_markup()
+
     settings = group.settings or {}
+
+    print(
+        f"[group_settings_keyboard] group_id={group.id} "
+        f"settings={settings}"
+    )
 
     def toggle(key: str, title: str):
         value = settings.get(key, False)
@@ -78,7 +94,6 @@ def group_settings_keyboard(
 
     builder.adjust(1)
 
-    # ➕ кнопка добавления banwords
     builder.button(
         text="🚫 Добавить бан-слова",
         callback_data=f"add_banwords:{group.id}"
@@ -94,12 +109,17 @@ def group_settings_keyboard(
     return builder.as_markup()
 
 
-def captcha_keyboard(chat_id: int, user_id: int) -> types.InlineKeyboardMarkup:
+def captcha_keyboard(
+    chat_id: int,
+    user_id: int
+) -> types.InlineKeyboardMarkup:
     return types.InlineKeyboardMarkup(
         inline_keyboard=[
-            [types.InlineKeyboardButton(
-                text="✅ Я не бот",
-                callback_data=f"captcha:{chat_id}:{user_id}"
-            )]
+            [
+                types.InlineKeyboardButton(
+                    text="✅ Я не бот",
+                    callback_data=f"captcha:{chat_id}:{user_id}"
+                )
+            ]
         ]
     )

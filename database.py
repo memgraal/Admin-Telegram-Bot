@@ -1,13 +1,7 @@
-import logging
-
-from sqlalchemy import ForeignKey, JSON, String
+from sqlalchemy import ForeignKey, JSON, String, DateTime, func
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import DateTime, func
-
-
-logger = logging.getLogger(__name__)
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -31,12 +25,6 @@ class GroupUser(Base):
     user: Mapped["User"] = relationship(back_populates="groups")
     group: Mapped["Group"] = relationship(back_populates="users")
 
-    def __repr__(self):
-        return (
-            f"GroupUsers(user_id={self.user_id}, "
-            f"group_id={self.group_id}, status={self.status})"
-        )
-
 
 class User(Base):
     __tablename__ = "users"
@@ -45,11 +33,9 @@ class User(Base):
     user_id: Mapped[str] = mapped_column(unique=True)
 
     groups: Mapped[list["GroupUser"]] = relationship(
-        back_populates="user", cascade="all, delete-orphan"
+        back_populates="user",
+        cascade="all"
     )
-
-    def __repr__(self):
-        return f"User(id={self.id}, user_id={self.user_id})"
 
 
 class Group(Base):
@@ -57,17 +43,16 @@ class Group(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     chat_id: Mapped[str] = mapped_column(unique=True)
+
     settings: Mapped[dict] = mapped_column(
         MutableDict.as_mutable(JSON),
         default=dict
     )
 
     users: Mapped[list["GroupUser"]] = relationship(
-        back_populates="group", cascade="all, delete-orphan"
+        back_populates="group",
+        cascade="all"
     )
-
-    def __repr__(self):
-        return f"Group(id={self.id}, settings={self.settings})"
 
 
 class Logs(Base):
@@ -77,16 +62,9 @@ class Logs(Base):
 
     chat_id: Mapped[str] = mapped_column(String(32), index=True)
     user_id: Mapped[str] = mapped_column(String(32), index=True)
-
     action: Mapped[str] = mapped_column(String(64))
 
     created_at: Mapped[DateTime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now()
     )
-
-    def __repr__(self):
-        return (
-            f"Logs(chat_id={self.chat_id}, "
-            f"user_id={self.user_id}, action={self.action})"
-        )

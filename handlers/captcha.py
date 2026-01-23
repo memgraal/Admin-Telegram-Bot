@@ -30,6 +30,20 @@ async def captcha_message_handler(
     message: types.Message,
     session: AsyncSession,
 ):
+
+    if (
+        message.new_chat_members
+        or message.left_chat_member
+        or message.new_chat_title
+        or message.new_chat_photo
+        or message.delete_chat_photo
+        or message.group_chat_created
+        or message.supergroup_chat_created
+        or message.channel_chat_created
+        or message.pinned_message
+    ):
+        return
+
     if message.from_user.is_bot:
         return
 

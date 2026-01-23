@@ -109,11 +109,15 @@ async def captcha_message_handler(
     )
 
     async def timeout():
-        await asyncio.sleep(CAPTCHA_TIMEOUT)
+        try:
+            await asyncio.sleep(CAPTCHA_TIMEOUT)
+        except asyncio.CancelledError:
+            return
 
-        if pending_captcha.pop(key, None):
-            await utils.delete_message_safe(captcha_msg)
-            await utils.delete_message_safe(message)
+        pending_captcha.pop(key, None)
+
+        await utils.delete_message_safe(captcha_msg)
+        await utils.delete_message_safe(message)
 
     pending_captcha[key] = asyncio.create_task(timeout())
 
